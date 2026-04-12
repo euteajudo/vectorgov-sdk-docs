@@ -7,7 +7,7 @@ Combinado com VectorGov, você tem RAG jurídico 100% local.
 
 Pré-requisitos:
     1. Ollama instalado: https://ollama.ai/
-    2. Modelo baixado: ollama pull qwen3:8b
+    2. Modelo baixado: ollama pull llama3:8b
     3. VectorGov SDK: pip install vectorgov
 
 Uso:
@@ -30,7 +30,7 @@ def exemplo_1_pipeline_simples():
     vg = VectorGov()
 
     # Cria pipeline RAG
-    rag = create_rag_pipeline(vg, model="qwen3:8b")
+    rag = create_rag_pipeline(vg, model="llama3:8b")
 
     # Faz pergunta
     query = "O que é ETP segundo a legislação?"
@@ -53,7 +53,7 @@ def exemplo_2_classe_completa():
     vg = VectorGov()
 
     # Cria instância do RAG
-    rag = VectorGovOllama(vg, model="qwen3:8b", top_k=5)
+    rag = VectorGovOllama(vg, model="llama3:8b", top_k=5)
 
     # Faz pergunta
     query = "Quando o ETP pode ser dispensado?"
@@ -121,7 +121,7 @@ Use linguagem formal e precisa."""
     # RAG com configuração customizada
     rag = VectorGovOllama(
         vg,
-        model="qwen3:8b",
+        model="llama3:8b",
         top_k=3,
         mode="precise",  # Busca mais precisa (usa HyDE + Reranker)
         temperature=0.0,  # Determinístico
@@ -147,7 +147,7 @@ def exemplo_5_chat_com_historico():
     from vectorgov.integrations.ollama import VectorGovOllama
 
     vg = VectorGov()
-    rag = VectorGovOllama(vg, model="qwen3:8b")
+    rag = VectorGovOllama(vg, model="llama3:8b")
 
     # Histórico de mensagens
     messages = [
@@ -182,13 +182,13 @@ def exemplo_6_comparar_modelos():
     available = list_models()
 
     # Modelos para comparar (filtra os disponíveis)
-    models_to_test = ["qwen3:4b", "qwen3:8b"]
+    models_to_test = ["llama3.2:3b", "llama3:8b"]
     models_to_test = [m for m in models_to_test if m in available]
 
     if len(models_to_test) < 2:
         print("Instale mais modelos para comparar:")
-        print("  ollama pull qwen3:4b")
-        print("  ollama pull qwen3:8b")
+        print("  ollama pull llama3.2:3b")
+        print("  ollama pull llama3:8b")
         return
 
     query = "O que é pesquisa de preços?"

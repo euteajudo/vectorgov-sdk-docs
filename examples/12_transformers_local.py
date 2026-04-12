@@ -9,9 +9,9 @@ Requisitos:
 
 Modelos recomendados (em ordem de leveza):
     - meta-llama/Llama-3.2-1B-Instruct (2GB VRAM, roda em CPU)
-    - Qwen/Qwen2.5-3B-Instruct (6GB VRAM, excelente português)
+    - meta-llama/Llama-3.2-3B-Instruct (6GB VRAM, excelente português)
     - meta-llama/Llama-3.2-3B-Instruct (6GB VRAM)
-    - Qwen/Qwen2.5-7B-Instruct (14GB VRAM, melhor qualidade)
+    - meta-llama/Llama-3.1-8B-Instruct (14GB VRAM, melhor qualidade)
 """
 
 import os
@@ -45,7 +45,7 @@ vg = VectorGov(api_key="vg_xxx")
 # Carrega modelo local (primeira vez faz download)
 llm = pipeline(
     "text-generation",
-    model="Qwen/Qwen2.5-3B-Instruct",
+    model="meta-llama/Llama-3.2-3B-Instruct",
     device_map="auto",  # Usa GPU se disponível
 )
 
@@ -111,7 +111,7 @@ from transformers import pipeline
 
 # Inicializa
 vg = VectorGov(api_key="vg_xxx")
-llm = pipeline("text-generation", model="Qwen/Qwen2.5-3B-Instruct", device_map="auto")
+llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device_map="auto")
 
 # Cria pipeline RAG
 rag = create_rag_pipeline(
@@ -221,7 +221,7 @@ def exemplo_modelos_recomendados():
 
     test_models = [
         "meta-llama/Llama-3.2-1B-Instruct",
-        "Qwen/Qwen2.5-7B-Instruct",
+        "meta-llama/Llama-3.1-8B-Instruct",
         "algum-modelo/modelo-13b-custom",
     ]
 
@@ -286,7 +286,7 @@ quantization_config = BitsAndBytesConfig(
 # Carrega modelo quantizado (usa ~4GB VRAM para modelo 7B)
 llm = pipeline(
     "text-generation",
-    model="Qwen/Qwen2.5-7B-Instruct",
+    model="meta-llama/Llama-3.1-8B-Instruct",
     model_kwargs={"quantization_config": quantization_config},
     device_map="auto",
 )

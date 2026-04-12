@@ -366,7 +366,7 @@ from vectorgov import VectorGov
 from vectorgov.integrations.ollama import VectorGovOllama
 
 vg = VectorGov(api_key="vg_xxx")
-rag = VectorGovOllama(vg, model="qwen3:8b")
+rag = VectorGovOllama(vg, model="llama3:8b")
 
 # Streaming nativo
 for chunk in rag.stream("O que é ETP?"):
@@ -401,7 +401,7 @@ Use LLMs locais gratuitos para RAG sem custos de API. Ideal para desenvolvimento
 ```bash
 # 1. Instale o Ollama: https://ollama.ai/
 # 2. Baixe um modelo
-ollama pull qwen3:8b
+ollama pull llama3:8b
 ```
 
 Não precisa de dependências extras do Python!
@@ -415,7 +415,7 @@ from vectorgov.integrations.ollama import create_rag_pipeline
 vg = VectorGov(api_key="vg_xxx")
 
 # Cria pipeline RAG com Ollama
-rag = create_rag_pipeline(vg, model="qwen3:8b")
+rag = create_rag_pipeline(vg, model="llama3:8b")
 
 # Usa como função
 resposta = rag("Quais os critérios de julgamento na licitação?")
@@ -429,7 +429,7 @@ from vectorgov import VectorGov
 from vectorgov.integrations.ollama import VectorGovOllama
 
 vg = VectorGov(api_key="vg_xxx")
-rag = VectorGovOllama(vg, model="qwen3:8b", top_k=5)
+rag = VectorGovOllama(vg, model="llama3:8b", top_k=5)
 
 response = rag.ask("O que é ETP?")
 
@@ -443,10 +443,10 @@ print(response.model)        # Modelo usado
 
 | Modelo | RAM | Qualidade | Português | Comando |
 |--------|-----|-----------|-----------|---------|
-| `qwen2.5:0.5b` | 1GB | Básica | Bom | `ollama pull qwen2.5:0.5b` |
-| `qwen2.5:3b` | 4GB | Boa | Muito Bom | `ollama pull qwen2.5:3b` |
-| `qwen2.5:7b` | 8GB | Muito Boa | **Excelente** | `ollama pull qwen2.5:7b` |
-| `qwen3:8b` | 8GB | **Excelente** | **Excelente** | `ollama pull qwen3:8b` |
+| `llama3.2:1b` | 1GB | Básica | Bom | `ollama pull llama3.2:1b` |
+| `llama3.2:3b` | 4GB | Boa | Muito Bom | `ollama pull llama3.2:3b` |
+| `llama3:8b` | 8GB | Muito Boa | **Excelente** | `ollama pull llama3:8b` |
+| `llama3:8b` | 8GB | **Excelente** | **Excelente** | `ollama pull llama3:8b` |
 | `llama3.2:3b` | 4GB | Boa | Bom | `ollama pull llama3.2:3b` |
 
 ```python
@@ -465,7 +465,7 @@ for name, info in get_recommended_models().items():
 ```python
 from vectorgov.integrations.ollama import VectorGovOllama
 
-rag = VectorGovOllama(vg, model="qwen3:8b")
+rag = VectorGovOllama(vg, model="llama3:8b")
 
 messages = [
     {"role": "user", "content": "O que é ETP?"}
@@ -505,7 +505,7 @@ from transformers import pipeline
 
 # Inicializa
 vg = VectorGov(api_key="vg_xxx")
-llm = pipeline("text-generation", model="Qwen/Qwen2.5-3B-Instruct", device_map="auto")
+llm = pipeline("text-generation", model="meta-llama/Llama-3.2-3B-Instruct", device_map="auto")
 
 # Cria pipeline RAG
 rag = create_rag_pipeline(vg, llm, top_k=5, max_new_tokens=512)
@@ -539,9 +539,9 @@ print(response.latency_ms)   # Tempo de busca
 | Modelo | VRAM | Qualidade | Português |
 |--------|------|-----------|-----------|
 | `meta-llama/Llama-3.2-1B-Instruct` | 2GB | Básica | Bom |
-| `Qwen/Qwen2.5-3B-Instruct` | 6GB | Boa | **Excelente** |
+| `meta-llama/Llama-3.2-3B-Instruct` | 6GB | Boa | **Excelente** |
 | `meta-llama/Llama-3.2-3B-Instruct` | 6GB | Boa | Bom |
-| `Qwen/Qwen2.5-7B-Instruct` | 14GB | Muito Boa | **Excelente** |
+| `meta-llama/Llama-3.1-8B-Instruct` | 14GB | Muito Boa | **Excelente** |
 | `microsoft/Phi-3-mini-4k-instruct` | 4GB | Boa | Razoável |
 
 ```python
@@ -581,7 +581,7 @@ quantization_config = BitsAndBytesConfig(
 
 llm = pipeline(
     "text-generation",
-    model="Qwen/Qwen2.5-7B-Instruct",
+    model="meta-llama/Llama-3.1-8B-Instruct",
     model_kwargs={"quantization_config": quantization_config},
     device_map="auto",
 )

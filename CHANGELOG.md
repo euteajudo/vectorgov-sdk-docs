@@ -11,12 +11,12 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ### Adicionado
 
-- **`grep()`** — Busca textual exata nos documentos via ripgrep:
+- **`grep()`** — Busca textual exata nos documentos:
   - Encontra trechos contendo exatamente o texto buscado
   - Filtro por `document_id`, controle de `max_results` e `context_lines`
   - Retorna `GrepResult` com `GrepMatch` iteravel
 
-- **`filesystem_search()`** — Busca no indice curado (PostgreSQL + ripgrep):
+- **`filesystem_search()`** — Busca no indice curado:
   - Modos: `auto` (detecta tipo da query), `index`, `grep`, `both`
   - Retorna `FilesystemResult` com `FilesystemHit` incluindo breadcrumb e match_reason
 
@@ -449,7 +449,7 @@ for chunk in response:
 
 # Com Ollama (gratuito/local)
 from vectorgov.integrations.ollama import VectorGovOllama
-rag = VectorGovOllama(vg, model="qwen3:8b")
+rag = VectorGovOllama(vg, model="llama3:8b")
 result = rag.ask("O que é ETP?")
 print(result.answer)
 ```
@@ -660,7 +660,7 @@ results = vg.search("O que é ETP?", use_cache=True)
   - `chat()` - Chat com histórico de mensagens
   - Exemplo `13_ollama_local.py` com 6 casos de uso
 - Sem dependências extras necessárias (usa apenas urllib)
-- Compatível com qualquer modelo do Ollama (qwen, llama, mistral, etc.)
+- Compatível com qualquer modelo do Ollama (llama, mistral, gemma, etc.)
 
 ### Alterado
 
