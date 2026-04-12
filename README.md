@@ -10,17 +10,6 @@ Acesse informações de leis, decretos e instruções normativas brasileiras com
 
 ---
 
-## SDKs Disponíveis
-
-| Linguagem | Pacote | Repositório |
-|-----------|--------|-------------|
-| **Python** | [`pip install vectorgov`](https://pypi.org/project/vectorgov/) | Este repositório |
-| **TypeScript/JavaScript** | [`npm install vectorgov`](https://www.npmjs.com/package/vectorgov) | [vectorgov-sdk-ts](https://github.com/euteajudo/vectorgov-sdk-ts) |
-
-> **Usando TypeScript/JavaScript?** Veja a documentação completa do SDK TypeScript em [github.com/euteajudo/vectorgov-sdk-ts](https://github.com/euteajudo/vectorgov-sdk-ts)
-
----
-
 ## Índice
 
 - [Instalação](#instalação)
@@ -1667,7 +1656,7 @@ Allow: /CLAUDE.md
 
 1. Acesse o **Playground**: `https://vectorgov.io/playground`
 2. Faça uma pergunta e ajuste as configurações (modo, top_k, cache).
-3. Use a seção **Código equivalente** para copiar um exemplo (Python/TypeScript/cURL)
+3. Use a seção **Código equivalente** para copiar um exemplo (Python/cURL)
    e substitua `vg_sua_chave` pela sua API key.
 
 ### 3) Ver limite e acompanhar uso da API key
