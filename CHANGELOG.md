@@ -7,6 +7,214 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [0.18.1] - 2026-04-13
+
+### Corrigido
+
+Auditoria sistematica do SDK espelhando a do CLI (v0.3.0). 6 bugs
+encontrados e corrigidos:
+
+1. **`lookup.match = None` para non-admin**: o backend aplica
+   `_strip_lookup_internals()` removendo `node_id`/`span_id` por
+   seguranca. O parser do SDK exigia `node_id` para construir o
+   `Hit`, entao `match` ficava None mesmo com `status=found` e
+   `text` presente no response. Fix: aceitar match_data flat quando
+   tiver `status=found` e `text`, independente de node_id. Agora
+   `result.match.text` retorna o artigo completo (stitched pelo
+   backend para artigos).
+
+2. **`hybrid` sem fallback para `graph_nodes`**: quando o reranker
+   achava os seeds fracos, o backend nao populava `direct_evidence`
+   (`hits=[]`), mesmo com `graph_nodes` contendo resultados
+   relevantes. `for hit in vg.hybrid(...)` iterava sobre lista vazia.
+   Fix: nova property `HybridResult.all_hits` que retorna
+   `hits if hits else graph_nodes`. `__iter__`, `__len__` e
+   `__getitem__` agora usam `all_hits` para UX consistente. Quem
+   precisa distinguir usa `.hits` (so diretos) e `.graph_nodes` (so
+   grafo) explicitamente.
+
+3. **`DocumentSummary.display_title`**: property nova que deriva um
+   titulo legivel do `document_id` quando `titulo` vem vazio do
+   backend (comum para acordaos e alguns docs). Exemplos:
+   - `LEI-14.133-2021` -> `"Lei 14.133/2021"`
+   - `DECRETO-10.947-2022` -> `"Decreto 10.947/2022"`
+   - `AC-1.852-2.020-P` -> `"Acordao 1.852/2020 (Plenario)"`
+   - `AC-2.450-2.025-2C` -> `"Acordao 2.450/2025 (2a Camara)"`
+
+4. **`get_system_prompt(style)` agora valida**: levanta `ValueError`
+   com lista de estilos disponiveis quando recebe nome desconhecido.
+   Antes retornava silenciosamente o prompt default, confundindo
+   usuarios que pensavam estar usando um estilo customizado.
+
+5. **`feedback(query_id, ...)` valida local**: query_ids com menos de
+   8 caracteres agora levantam `ValidationError` com mensagem PT
+   clara em vez de fazer round-trip ate o backend e retornar o raw
+   `422 Pydantic ValidationError`.
+
+### Adicionado
+
+- **Aliases `.hits` em GrepResult, FilesystemResult, MergedResult**:
+  os 3 models tinham campos com nomes diferentes (`matches`,
+  `results`, `results`). Agora todos expoem `.hits` como alias para
+  consistencia com `SearchResult.hits`, `SmartSearchResult.hits` e
+  `HybridResult.hits`. Codigo que ja usa os nomes originais
+  continua funcionando.
+
+### Compatibilidade
+
+- Fix 2 muda o comportamento de `len(hybrid_result)`, `iter(...)` e
+  `hybrid_result[0]` para usar `all_hits` (fallback). Codigo que
+  dependia de `len(result) == 0` quando `direct_evidence` vazio mas
+  `graph_nodes` nao, vai ver o count total agora. Semantica mais
+  consistente e intuitiva.
+
+## [0.18.0] - 2026-04-12
+
+### Adicionado
+
+- Campo `request_id` em todos os Result types — identificador único de 32
+  chars hex gerado pelo backend para cada requisição HTTP. Exposto em:
+  `SearchResult`, `SmartSearchResult`, `HybridResult`, `LookupResult`,
+  `GrepResult`, `FilesystemResult`, `MergedResult` e `CanonicalResult`.
+  Vem do campo `request_id` no body JSON (precedência) ou do header
+  `X-Request-ID` como fallback automático.
+
+  ```python
+  result = vg.search("art. 75 da Lei 14.133")
+  print(result.request_id)  # "a1b2c3d4e5f6..." (32 chars hex)
+  ```
+
+  Use este valor para correlacionar com logs no dashboard `/uso-api` e
+  para suporte técnico (fornecer ao reportar bugs).
+
+- `VectorGovError` e todas as subclasses (`AuthError`, `RateLimitError`,
+  `ValidationError`, `TierError`, `ServerError`, `ConnectionError`,
+  `TimeoutError`) expõem `error.request_id` quando disponível — extraído
+  do body JSON de erro ou do header `X-Request-ID`. O `__str__` da
+  exceção agora inclui o `request_id` quando presente.
+
+  ```python
+  try:
+      vg.search("q")
+  except VectorGovError as e:
+      print(f"Falhou: {e.request_id}")  # enviar para suporte
+  ```
+
+- Testes em `tests/test_request_id.py` cobrindo: campo existe com default
+  vazio em todos os Results, captura via body, fallback via header,
+  exceções com `request_id` e propagação pelo HTTPClient.
+
+### Deprecado
+
+- `result.query_id` continua funcionando mas agora é documentado
+  explicitamente como **cache key / feedback key** (input de
+  `/sdk/feedback`). Para tracking de requisições individuais, use
+  `result.request_id` — `query_id` é determinístico (mesma query gera o
+  mesmo valor entre clientes), portanto inadequado como ID de tracking.
+
+### Infraestrutura
+
+- `_http.py` captura `X-Request-ID` do header em `request()`,
+  `post_multipart()` e `stream()`, injetando no dict retornado como
+  fallback quando o body JSON não traz o campo. Body tem precedência
+  sobre header (compatível com endpoints legado ou não instrumentados).
+- `_handle_error()` propaga `request_id` para o construtor das exceções
+  (body JSON de erro > header `X-Request-ID`).
+
+## [0.17.3] - 2026-04-12
+
+### Alterado
+
+Documentação interna limpa: removidas menções a tecnologias específicas do
+stack backend nos docstrings, comentários, help messages, README, CHANGELOG
+e examples. Campo `text_source` agora expõe `"semantic"` ao invés do valor
+interno do backend. Não há mudanças de comportamento nem quebra de API pública.
+
+## [0.17.2] - 2026-04-12
+
+### Adicionado
+
+- `evidence_url` e `document_url` em **4 models** que faltavam:
+  - `GrepMatch` — matches de busca textual
+  - `FilesystemHit` — resultados do indice curado
+  - `MergedHit` — resultados da busca dual-path (hybrid + filesystem)
+  - `LookupResult` — resultado de lookup de dispositivo normativo
+
+- Parsers atualizados em `client.py` para extrair esses campos do
+  response JSON do backend em `grep()`, `filesystem_search()`,
+  `merged()` e `_parse_lookup_response()`
+
+### Notas
+
+Esses campos ja existiam em `Hit` (usado por `search()`, `smart_search()`,
+`hybrid()`). Com esta versao, **todos os 7 metodos de busca** retornam
+`evidence_url` e `document_url` quando o backend os popula:
+
+```python
+result = vg.grep("dispensa de licitacao", max_results=1)
+match = result.matches[0]
+print(match.evidence_url)   # /api/v1/evidence/leis%3AIN-65-2021%23ART-007
+print(match.document_url)   # /api/v1/evidence/download/source/IN-65-2021
+
+result = vg.lookup("Art. 75 da Lei 14.133")
+print(result.evidence_url)  # /api/v1/evidence/leis%3ALEI-14.133-2021%23ART-075
+```
+
+O campo `LookupResult.evidence_url` elimina a necessidade do
+workaround via `result._raw_response.get("evidence_url")` que o
+CLI v0.2.0 usava.
+
+Campos sao `Optional[str]` com default `None` — backwards compatible.
+
+## [0.17.1] - 2026-04-11
+
+### Corrigido (API-side — refletido no SDK)
+
+- **`search().cached` e `smart_search().cached` agora funcionam**: Para usuarios
+  nao-admin, o campo `cached` era removido da resposta pelo strip interno,
+  fazendo o SDK sempre ver `cached=False` mesmo quando a resposta vinha do cache.
+  Correcao: `cached` removido dos sets `_SDK_SEARCH_ROOT_INTERNAL` e
+  `_SMART_SEARCH_ROOT_INTERNAL` — e agora campo publico legitimo.
+
+- **SearchService Lane C (cache semantico)**: A inicializacao do cache async
+  em `_ensure_async_resources()` chamava `get_semantic_cache_async()` SEM o
+  argumento obrigatorio `remote_embedder`, causando `TypeError` silencioso
+  e deixando `_semantic_cache=None`. Correcao: passa `self._remote_embedder`.
+
+- **`hybrid()` — queries nonsense retornavam graph_nodes**: Apos a reducao
+  do `MIN_HYBRID_SCORE` para 0.001, queries sem sentido continuavam retornando
+  graph_nodes porque o safety_net do reranker mantinha top-3 mesmo com score ~0.
+  Correcao: deteccao de nonsense via `rerank_score < 0.01` — se o reranker
+  considerou tudo irrelevante, retorna `hits=[]` E `graph_nodes=[]`.
+
+### Notas de comportamento
+
+- Cache semantico agora funciona: 2a chamada identica retorna `cached=True`
+  e latencia ~4x menor (~390ms vs ~1600ms).
+- `hybrid("xyzzy12345qwerty")` retorna listas vazias em vez de graph_nodes.
+
+## [0.17.0] - 2026-04-09
+
+### Corrigido (API-side — refletido no SDK)
+
+- **`hybrid()` — stats completos**: Resposta agora inclui `seeds`, `graph_nodes`, `tokens`, `truncated` no objeto `stats` (antes retornava apenas `total_chunks`)
+- **`hybrid()` — hops=2 funciona**: Expansao de grafo com 2 saltos agora retorna nos de hop 1 e 2 (antes fixo em 1)
+- **`hybrid()` — graph nodes com metadados**: Nos expandidos agora incluem `node_id`, `span_id`, `tipo_documento` preenchidos (antes vinham vazios)
+- **`hybrid()` — score filter**: Hits diretos com score < 0.01 sao filtrados; queries sem sentido retornam lista vazia
+- **`merged()` — mutual_count**: Agora retorna `int >= 0` (antes retornava `None` para usuarios nao-admin)
+- **`merged()` — threshold adaptativo**: Queries sem sentido retornam lista vazia (threshold RRF adaptativo)
+- **`lookup()` — crash com "Inciso"**: `vg.lookup("Art. 24, Inciso 2o")` nao causa mais HTTP 500; retorna status `ambiguous`
+- **`search()` — score filter**: Resultados com score < 0.01 sao filtrados (queries nonsense retornam lista vazia)
+- **`grep()` — filtro document_id**: Aceita formato sem pontos (`LEI-14133-2021`) com fallback automatico
+- **`filesystem_search()` / `grep()` — max_length**: Validacao de 1000 caracteres padronizada
+
+### Notas de comportamento
+
+- Queries sem sentido (ex: "xyzzy12345qwerty") agora retornam `hits=[]` em todos endpoints
+- `hybrid().stats` sempre contem: `seeds`, `graph_nodes`, `tokens`, `truncated`, `total_chunks`
+- `merged().mutual_count` e sempre `int >= 0` (contrato garantido)
+- `lookup()` retorna `status="error"` em vez de HTTP 500 para erros internos
+
 ## [0.16.0] - 2026-03-30
 
 ### Adicionado
