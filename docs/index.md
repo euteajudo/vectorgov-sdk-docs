@@ -41,7 +41,7 @@ Art. 18. A fase preparatória do processo licitatório é caracterizada pelo pla
 
     ---
 
-    Os 23 métodos do SDK em uma única página, com decision tree.
+    Os 22 métodos do SDK em uma única página, com decision tree.
 
     [:octicons-arrow-right-24: cheat-sheet.md](cheat-sheet.md)
 
@@ -125,7 +125,7 @@ for block in response.content:
 
 ---
 
-## 📚 Categorias completas (23 métodos)
+## 📚 Categorias completas (22 métodos)
 
 <div class="grid cards" markdown>
 
@@ -141,11 +141,11 @@ for block in response.content:
 
     [:octicons-arrow-right-24: Detalhes](api/methods.md#function-calling-4-metodos)
 
--   :material-counter:{ .lg .middle } **📊 Tokens & Feedback (3)**
+-   :material-counter:{ .lg .middle } **📊 Tokens & Feedback (2)**
 
-    `estimate_tokens` · `feedback` · `store_response`
+    `estimate_tokens` · `feedback`
 
-    [:octicons-arrow-right-24: Detalhes](api/methods.md#tokens-feedback-3-metodos)
+    [:octicons-arrow-right-24: Detalhes](api/methods.md#tokens-feedback-2-metodos)
 
 -   :material-format-quote-open:{ .lg .middle } **🎯 System Prompts (2)**
 

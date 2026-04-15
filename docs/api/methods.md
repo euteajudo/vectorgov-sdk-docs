@@ -1,6 +1,6 @@
 # Reference completa de métodos
 
-> 23 métodos públicos do `VectorGov` cliente, organizados por categoria. Cada método segue o mesmo padrão: **propósito → quando usar → exemplo mínimo → parâmetros → retorno → exceções → exemplo avançado → veja também**.
+> 22 métodos públicos do `VectorGov` cliente, organizados por categoria. Cada método segue o mesmo padrão: **propósito → quando usar → exemplo mínimo → parâmetros → retorno → exceções → exemplo avançado → veja também**.
 >
 > 💡 **Procurando um método específico?** Use a [Cheat Sheet](../cheat-sheet.md) para visão geral em 1 página, ou `Ctrl+F` aqui para buscar por nome.
 
@@ -679,7 +679,7 @@ result_text = vg.execute_tool_call(tool_call, mode="balanced")
 
 ---
 
-## 📊 Tokens & Feedback (3 métodos)
+## 📊 Tokens & Feedback (2 métodos)
 
 ### `estimate_tokens`
 
@@ -734,37 +734,6 @@ vg.feedback(query_id=result.query_id, like=False)
 - `like: bool` — `True` (positivo) ou `False` (negativo)
 
 **Retorna**: `bool` — `True` se registrado.
-**Custo**: free.
-
----
-
-### `store_response`
-
-**Armazena uma resposta gerada por seu LLM** no cache do VectorGov. Habilita feedback e contribui (opt-in) para treinamento.
-
-```python
-result = vg.search("licitacao")
-messages = result.to_messages(query="Critérios?")
-
-# Você gera com seu LLM
-import openai
-response = openai.chat.completions.create(model="gpt-4o", messages=messages)
-answer = response.choices[0].message.content
-
-# Armazena
-stored = vg.store_response(
-    query="Critérios?",
-    answer=answer,
-    provider="openai",
-    model="gpt-4o",
-    chunks_used=len(result.hits),
-    latency_ms=response.usage.completion_tokens / 50 * 1000,  # estimativa
-)
-print(f"Stored: {stored.query_hash}")
-```
-
-**Parâmetros**: `query`, `answer`, `provider`, `model`, `chunks_used`, `latency_ms`, `retrieval_ms`, `generation_ms`.
-**Retorna**: `StoreResponseResult` com `query_hash` (use em `feedback`).
 **Custo**: free.
 
 ---

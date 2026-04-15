@@ -1,6 +1,6 @@
 # Cheat Sheet — VectorGov SDK
 
-> **TL;DR**: 23 métodos, 8 são de busca, o resto é apoio (tokens, audit, function calling, prompts, documentos). Esta página cabe em uma tela e responde **"o que posso fazer e qual método uso?"** sem você precisar abrir mais nada.
+> **TL;DR**: 22 métodos, 8 são de busca, o resto é apoio (tokens, audit, function calling, prompts, documentos). Esta página cabe em uma tela e responde **"o que posso fazer e qual método uso?"** sem você precisar abrir mais nada.
 
 ---
 
@@ -70,7 +70,7 @@ graph TD
 
 ---
 
-## 📋 Todos os 23 métodos em uma tela
+## 📋 Todos os 22 métodos em uma tela
 
 ### 🔍 Busca (8 métodos) — o coração do SDK
 
@@ -94,13 +94,12 @@ graph TD
 | `to_google_tool()` | `dict` | **free** | Tool no formato Google Gemini |
 | `execute_tool_call(tool_call)` | `str` | 💰 | Executa tool_call de qualquer LLM e retorna resultado |
 
-### 📊 Tokens & Feedback (3 métodos)
+### 📊 Tokens & Feedback (2 métodos)
 
 | Método | Retorna | Custo | Caso de uso |
 |---|---|---|---|
 | `estimate_tokens(content)` | `TokenStats` | **free** | Estima tokens antes de enviar para LLM |
 | `feedback(query_id, like)` | `bool` | **free** | Like/dislike de resultado (melhora futuras buscas) |
-| `store_response(query, answer, ...)` | `StoreResponseResult` | **free** | Armazena resposta de LLM externo (opt-in) |
 
 ### 🎯 System Prompts (2 métodos)
 
@@ -252,7 +251,7 @@ for log in critical.logs:
 
 ## 🧭 Próximos passos
 
-- 📖 [Reference técnica completa dos 23 métodos](api/methods.md) — assinatura, parâmetros, retorno, exceções
+- 📖 [Reference técnica completa dos 22 métodos](api/methods.md) — assinatura, parâmetros, retorno, exceções
 - 🧱 [Modelos de dados (Hit, SearchResult, etc.)](api/models.md)
 - 🔌 [Integrações: OpenAI, Claude, Gemini, LangChain, LangGraph, Ollama, MCP](integrations/index.md)
 - 🧠 [Guia de busca avançada](guides/advanced-search.md) — modos, filtros, dual-lane

@@ -9,7 +9,8 @@ Acesse leis, decretos e instruções normativas com chunks prontos para alimenta
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Novidades**:
-> - **0.19.5** — `to_context()` e builders XML/markdown usam `citation` no formato jurídico ([CHANGELOG](CHANGELOG.md#0195---2026-04-15))
+> - **0.19.6** — ⚠️ BREAKING: `vg.store_response()` removido (endpoint descontinuado). Use `result.query_id` direto em `vg.feedback()` ([CHANGELOG](CHANGELOG.md#0196---2026-04-15))
+> - **0.19.5** — `to_context()` e builders XML/markdown usam `citation` no formato jurídico
 > - **0.19.4** — campo `citation` em todos os Result types (`Art. 75 da Lei 14.133/2021`) — pronto para LLMs
 > - **0.19.2** — créditos em todos os 8 endpoints pagos
 > - **0.19.0** — IDs internos de implementação removidos do response público
@@ -92,7 +93,7 @@ graph TD
 
 ---
 
-## 📋 Os 23 métodos do SDK
+## 📋 Os 22 métodos do SDK
 
 ### 🔍 Busca (8)
 
@@ -116,13 +117,12 @@ graph TD
 | [`to_google_tool`](docs/api/methods.md#to_google_tool) | Gera tool no formato Google Gemini |
 | [`execute_tool_call`](docs/api/methods.md#execute_tool_call) | Executa tool_call de qualquer LLM e retorna resultado |
 
-### 📊 Tokens, Feedback & Prompts (5)
+### 📊 Tokens, Feedback & Prompts (4)
 
 | Método | O que faz |
 |---|---|
 | [`estimate_tokens`](docs/api/methods.md#estimate_tokens) | Estima tokens antes de enviar para LLM (free) |
 | [`feedback`](docs/api/methods.md#feedback) | Like/dislike de resultado para melhoria contínua |
-| [`store_response`](docs/api/methods.md#store_response) | Armazena resposta de LLM externo (opt-in) |
 | [`get_system_prompt`](docs/api/methods.md#get_system_prompt) | Prompts pré-otimizados: default/concise/detailed/chatbot |
 | [`available_prompts`](docs/api/methods.md#available_prompts) | Lista os estilos disponíveis |
 
@@ -284,7 +284,7 @@ pip install 'vectorgov[mcp]'
 
 | Recurso | Quando usar |
 |---|---|
-| 🧭 [Cheat Sheet](docs/cheat-sheet.md) | Lookup rápido — todos os 23 métodos em 1 página |
+| 🧭 [Cheat Sheet](docs/cheat-sheet.md) | Lookup rápido — todos os 22 métodos em 1 página |
 | 📖 [Reference de métodos](docs/api/methods.md) | Detalhe técnico de cada método (assinatura, parâmetros, exceções) |
 | 🧱 [Modelos de dados](docs/api/models.md) | `Hit`, `SearchResult`, `LookupResult`, etc. |
 | 🧠 [Guia: busca avançada](docs/guides/advanced-search.md) | Modos, filtros, dual-lane, query rewriting |

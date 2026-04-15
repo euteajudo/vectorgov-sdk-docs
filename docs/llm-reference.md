@@ -2,7 +2,7 @@
 
 > **🤖 Para agentes LLM**: esta página consolida tudo que um agente precisa para usar o VectorGov SDK em uma única view. Ela é otimizada para `curl`/copy-paste em prompts. Para humanos, prefira o [README](https://github.com/euteajudo/vectorgov-sdk) ou a [Cheat Sheet](cheat-sheet.md).
 >
-> **Versão do SDK**: 0.19.5 · **Python**: 3.10+ · **Licença**: MIT
+> **Versão do SDK**: 0.19.6 · **Python**: 3.10+ · **Licença**: MIT
 
 ---
 
@@ -32,7 +32,7 @@ Art. 18. A fase preparatória do processo licitatório é caracterizada pelo pla
 
 ---
 
-## Os 23 métodos públicos
+## Os 22 métodos públicos
 
 | Método | Custo | Retorna | Quando usar |
 |---|---|---|---|
@@ -46,7 +46,6 @@ Art. 18. A fase preparatória do processo licitatório é caracterizada pelo pla
 | `read_canonical(doc_id, span_id)` | **free** | `CanonicalResult` | Texto canônico completo |
 | `feedback(query_id, like)` | **free** | `bool` | Like/dislike (melhoria contínua) |
 | `estimate_tokens(content, ...)` | **free** | `TokenStats` | Estima tokens antes do LLM |
-| `store_response(query, answer, ...)` | **free** | `StoreResponseResult` | Armazena resposta de LLM externo |
 | `get_system_prompt(style)` | **free** | `str` | Prompts pré-otimizados |
 | `available_prompts` (property) | **free** | `list[str]` | Lista estilos disponíveis |
 | `to_openai_tool()` | **free** | `dict` | Tool no formato OpenAI |
@@ -60,7 +59,7 @@ Art. 18. A fase preparatória do processo licitatório é caracterizada pelo pla
 | `get_audit_event_types()` | **free** | `list[str]` | Tipos de evento disponíveis |
 | `close()` | **free** | `None` | Libera recursos HTTP |
 
-**Total**: 23 métodos. 8 de busca, 4 de function calling, 5 de tokens/feedback/prompts, 2 de documentos, 3 de auditoria, 1 utilitário.
+**Total**: 22 métodos. 8 de busca, 4 de function calling, 4 de tokens/feedback/prompts, 2 de documentos, 3 de auditoria, 1 utilitário.
 
 ---
 
@@ -348,7 +347,8 @@ label = hit.citation or hit.source
 
 ## Versionamento e changelog
 
-- **0.19.5** (atual) — `to_context()` e builders XML/markdown usam `citation`
+- **0.19.6** (atual) — ⚠️ BREAKING: `store_response()` removido (endpoint descontinuado); use `result.query_id` direto em `feedback()`
+- **0.19.5** — `to_context()` e builders XML/markdown usam `citation`
 - **0.19.4** — campo `citation` em todos os Result types
 - **0.19.3** — fix: hybrid lê `evidence_url` em hits de grafo
 - **0.19.2** — créditos em todos os 8 endpoints pagos

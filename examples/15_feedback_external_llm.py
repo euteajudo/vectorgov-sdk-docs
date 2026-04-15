@@ -6,11 +6,11 @@ Demonstra o fluxo completo:
 2. Gerar resposta com OpenAI (ou outro LLM)
 3. Enviar feedback (like/dislike) usando o `query_id` da busca
 
-> **Nota sobre `store_response()`**: a versão atual do SDK 0.19.5 expõe
-> o método `vg.store_response()`, mas o endpoint correspondente no
-> backend foi descontinuado. Para enviar feedback, use diretamente o
-> `query_id` que vem do `vg.search()` — funciona sem precisar
-> armazenar a resposta.
+> **Breaking change em 0.19.6**: o método `vg.store_response()` foi
+> removido do SDK (o endpoint correspondente no backend já havia sido
+> descontinuado). Para feedback em respostas de LLMs externos, use
+> diretamente o `query_id` que vem do `vg.search()` — o fluxo abaixo
+> é agora o canônico.
 
 Requisitos:
     pip install vectorgov openai

@@ -7,6 +7,52 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [0.19.6] - 2026-04-15
+
+### Removido (BREAKING)
+
+- **Método `vg.store_response()` removido**: chamava um endpoint
+  (`POST /cache/store`) que já havia sido descontinuado no backend e
+  retornava `404 Not Found` em qualquer chamada. O método estava
+  efetivamente quebrado desde então.
+
+  Também removidos:
+  - `vectorgov.AsyncVectorGov.store_response()` (versão async)
+  - `vectorgov.StoreResponseResult` (dataclass de retorno)
+  - Export `StoreResponseResult` do `vectorgov.__init__`
+
+  **Migração**: o objetivo do `store_response` era habilitar feedback
+  (like/dislike) para respostas de LLMs externos. Esse fluxo agora é
+  mais simples — basta usar o `query_id` que vem diretamente do
+  `vg.search()`:
+
+  ```python
+  # Antes (v0.19.5 — quebrado)
+  result = vg.search("ETP")
+  answer = openai.chat.completions.create(...)
+  stored = vg.store_response(query="ETP", answer=answer, ...)
+  vg.feedback(stored.query_hash, like=True)
+
+  # Depois (v0.19.6+)
+  result = vg.search("ETP")
+  answer = openai.chat.completions.create(...)
+  vg.feedback(result.query_id, like=True)  # query_id direto
+  ```
+
+### Corrigido (no backend, sem mudança de API)
+
+- **`vg.feedback()` agora retorna `True` de verdade**: um refactor
+  anterior do backend havia removido um método interno que o handler
+  de feedback ainda usava, fazendo com que toda chamada a
+  `feedback()` retornasse `success: false`. O backend foi corrigido
+  e o `vg.feedback()` agora funciona normalmente.
+
+### Detectado durante smoke test end-to-end
+
+A remoção do `store_response` e o fix do `feedback` foram consequência
+de validação real de todos os 19 exemplos do `examples/` contra
+OpenAI/Anthropic/Gemini de produção.
+
 ## [0.19.5] - 2026-04-15
 
 ### Corrigido
