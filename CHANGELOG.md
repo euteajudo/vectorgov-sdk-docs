@@ -631,7 +631,7 @@ if stats.total_tokens > MAX_TOKENS:
 
 ### Removido
 
-- **Método `ask_stream()` removido** - O endpoint `/ask/stream` agora é restrito apenas para administradores. Desenvolvedores devem usar:
+- **Método `ask_stream()` removido** - Não faz mais parte do SDK público. Desenvolvedores devem usar:
   - `search()` para obter contexto + `to_messages()` para enviar ao LLM de sua escolha
   - Integrações com Ollama, Transformers, LangChain para RAG local
   - Function Calling para agentes com OpenAI/Anthropic/Google
@@ -816,34 +816,20 @@ results = vg.search("O que é ETP?", use_cache=True)
 
 ### Adicionado
 
-- **Gerenciamento de Documentos** - Novos métodos para gerenciar a base de conhecimento:
+- **Consulta de Documentos** - Novos métodos para consultar a base de conhecimento:
   - `list_documents(page, limit)` - Lista documentos disponíveis (paginado)
   - `get_document(document_id)` - Detalhes de um documento específico
-  - `upload_pdf(file, metadata)` - Upload de PDF **(Admin)**
-  - `get_ingest_status(task_id)` - Status da ingestão
-  - `start_enrichment(document_id)` - Inicia enriquecimento **(Admin)**
-  - `get_enrichment_status(task_id)` - Status do enriquecimento
-  - `delete_document(document_id)` - Exclui documento **(Admin)**
 
 - **Novos modelos de dados**:
-  - `DocumentSummary` - Resumo de documento com progresso de enriquecimento
+  - `DocumentSummary` - Resumo de documento
   - `DocumentsResponse` - Resposta paginada de lista de documentos
-  - `UploadResponse` - Resposta de upload com task_id
-  - `IngestStatus` - Status de ingestão (pending/processing/completed/failed)
-  - `EnrichStatus` - Status de enriquecimento com progresso detalhado
-  - `DeleteResponse` - Resposta de exclusão
 
-- **Novos métodos HTTP internos**:
-  - `HTTPClient.delete()` - Requisições DELETE
-  - `HTTPClient.post_multipart()` - Upload de arquivos multipart/form-data
-
-### Permissões
-
-| Operação | Permissão |
-|----------|-----------|
-| Listar/consultar documentos | Todos |
-| Ver status de tarefas | Todos |
-| Upload, enriquecimento, exclusão | **Admin** |
+> **Nota histórica**: os métodos de gerenciamento de documentos
+> (`upload_pdf`, `start_enrichment`, `delete_document`,
+> `get_ingest_status`, `get_enrichment_status`) que foram introduzidos
+> nesta versão **foram removidos** em uma versão posterior do SDK público
+> e não estão mais disponíveis. Use `list_documents` e `get_document`
+> apenas para consultar a base existente.
 
 
 ## [0.7.0] - 2025-01-08

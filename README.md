@@ -42,11 +42,8 @@ Acesse informações de leis, decretos e instruções normativas brasileiras com
   - [System Prompts](#system-prompts-customizados)
   - [Feedback](#feedback)
   - [Tratamento de Erros](#tratamento-de-erros)
-- **Gerenciamento de Documentos**
-  - [Permissoes](#permissões)
+- **Consulta de Documentos**
   - [Listar e Consultar](#listar-e-consultar-documentos)
-  - [Upload e Ingestao (Admin)](#upload-e-ingestão-admin)
-  - [Exclusao (Admin)](#exclusão-admin)
 - **Documentação para LLMs**
   - [llms.txt](#llmstxt)
   - [CLAUDE.md](#claudemd)
@@ -1687,23 +1684,11 @@ MIT License - veja [LICENSE](LICENSE) para detalhes.
 
 ---
 
-# 📁 Gerenciamento de Documentos
+# 📁 Consulta de Documentos
 
-O SDK permite gerenciar documentos na base de conhecimento. Algumas operações são restritas a **administradores**.
-
-## Permissões
-
-| Operação | Permissão | Método |
-|----------|-----------|--------|
-| Listar documentos | Todos | `list_documents()` |
-| Ver detalhes | Todos | `get_document(id)` |
-| Upload de PDF | Admin | `upload_pdf()` |
-| Acompanhar ingestão | Admin | `get_ingest_status()` |
-| Excluir documento | Admin | `delete_document()` |
+O SDK permite **consultar documentos** indexados na base de conhecimento.
 
 ## Listar e Consultar Documentos
-
-Qualquer usuário autenticado pode listar e consultar documentos.
 
 ```python
 from vectorgov import VectorGov
@@ -1727,40 +1712,6 @@ doc = vg.get_document("LEI-14133-2021")
 print(f"Documento: {doc.titulo}")
 print(f"Status: {'Enriquecido' if doc.is_enriched else 'Pendente'}")
 ```
-
-## Upload e Ingestão (Admin)
-
-```python
-# Upload de PDF (máx 50 MB)
-uploaded = vg.upload_pdf(
-    file_path="lei_14133.pdf",
-    tipo_documento="LEI",   # LEI, DECRETO, IN, PORTARIA, RESOLUCAO
-    numero="14133",
-    ano=2021,
-)
-print(f"Task: {uploaded.task_id}")
-
-# Acompanhar progresso da ingestão
-import time
-while True:
-    status = vg.get_ingest_status(uploaded.task_id)
-    print(f"[{status.progress:.0%}] {status.status} - {status.message}")
-    if status.status in ("completed", "failed"):
-        break
-    time.sleep(3)
-
-print(f"Chunks criados: {status.chunks_created}")
-```
-
-## Exclusão (Admin)
-
-```python
-result = vg.delete_document("LEI-14133-2021")
-print(result.message)  # "Documento removido com sucesso"
-```
-
-> **Nota:** `start_enrichment()` e `get_enrichment_status()` foram **descontinuados** em 31/01/2026.
-> O sistema agora usa ingestão determinística (SpanParser + ArticleOrchestrator).
 
 ## Modelos de Resposta
 
