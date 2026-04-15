@@ -7,6 +7,211 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [0.19.5] - 2026-04-15
+
+### Corrigido
+
+- **Builders de contexto XML/markdown agora usam `citation`**:
+  `HybridResult.to_context()` e os builders de XML/markdown para
+  hybrid e lookup agora preferem `hit.citation` em vez de IDs
+  internos que podem vir vazios no response público.
+
+  Resultado visível para o desenvolvedor: output com label legal no
+  formato `[G-1] Art. 75 da Lei 14.133/2021 (hop=1, freq=3)` em vez
+  de `[G-1] LEI-14133-2021, (hop=1, freq=3)` com vírgula solta.
+
+  **Impacto:** contexto enviado ao LLM agora tem identificadores no
+  formato jurídico brasileiro, facilitando a geração de citações
+  corretas nas respostas.
+
+  Para responses XML, o atributo `cite` (com a referência legal
+  formatada) é agora adicionado aos elementos `<dispositivo>` e
+  `<dispositivo_relacionado>` — o LLM pode usar como label
+  legível mesmo quando `id` (span_id) vem vazio.
+
+  **Retrocompatibilidade:** os atributos `id` e `document_id`
+  continuam sendo populados como antes. O novo atributo `cite` é
+  aditivo e opcional (só aparece quando `citation` está populada).
+
+- **Documentação corrigida**: exemplos de `vg.grep()` em README,
+  docs e docstrings inline usavam `m.span_id` em prints, mas esse
+  é um ID interno que pode vir vazio no response público.
+  Substituídos por `m.citation or m.document_id`.
+
+### Observação
+
+Esta release **não muda APIs públicas** — apenas corrige a forma
+como o SDK constrói strings de contexto. Se você usa
+`hit.citation` diretamente, o comportamento não muda.
+
+## [0.19.4] - 2026-04-15
+
+### Adicionado
+
+- **Campo `citation` com referência legal formatada**: `Hit`, `GrepMatch`,
+  `FilesystemHit`, `MergedHit` e `CanonicalResult` ganham o atributo
+  `citation: Optional[str]`, uma string pronta para exibição ao usuário
+  no estilo jurídico brasileiro.
+
+  **Exemplos:**
+  ```python
+  hit.citation  # 'Art. 75 da Lei 14.133/2021'
+  hit.citation  # '§ 2º do Art. 75 da Lei 14.133/2021'
+  hit.citation  # 'Inc. III do § 2º do Art. 75 da Lei 14.133/2021'
+  hit.citation  # 'Alínea "a" do Inc. III do § 2º do Art. 75 da Lei 14.133/2021'
+  ```
+
+  **Convenção aplicada:**
+  - Artigos 1 a 9: ordinal (`Art. 1º`, `Art. 9º`)
+  - Artigos 10+: cardinal (`Art. 10`, `Art. 75`)
+  - Parágrafo único tratado explicitamente (`Parágrafo único do Art. 75`)
+  - Número do documento com separador de milhar brasileiro (`14.133`)
+  - Preposição gramatical correta por gênero do tipo: `da Lei`, `do Decreto`
+
+  **Por que preferir `citation` a `source`:**
+  - Formato uniforme em todos os endpoints (search, hybrid, lookup,
+    filesystem, merged)
+  - Segue a convenção da doutrina jurídica brasileira — pronto para
+    exibição a humanos e LLMs
+  - Não expõe IDs internos (`span_id`, `node_id`) no texto
+  - Backend faz dedup por `citation` — mesma referência legal em
+    múltiplos chunks aparece só uma vez
+
+  O campo é `Optional[str]` — caches legados ou hits sem metadados
+  suficientes retornam `None`. O `__repr__` do `Hit` já usa `citation`
+  quando disponível, com fallback para `source`.
+
+  **Uso recomendado:**
+  ```python
+  for hit in result.hits:
+      label = hit.citation or hit.source  # fallback defensivo
+      print(f"[{label}] {hit.text[:100]}")
+  ```
+
+  O campo é populado em todos os endpoints de busca:
+  `/sdk/search`, `/sdk/hybrid`, `/sdk/smart-search`, `/sdk/lookup`,
+  `/filesystem/search`, `/filesystem/grep`, `/filesystem/read`,
+  `/search/merged`.
+
+## [0.19.3] - 2026-04-15
+
+### Corrigido
+
+- **`vg.hybrid()` — `evidence_url` e `document_url` em hits de grafo**:
+  hits vindos da expansão por grafo de citações tinham `evidence_url=None`
+  mesmo quando o backend populava corretamente. Os hits diretos (direct
+  evidence) já funcionavam corretamente.
+
+  Afetava queries onde a busca semântica não retornava seeds diretos e
+  o resultado vinha só via expansão de grafo (comportamento comum em
+  queries como "dispensa de licitação").
+
+  Agora todos os hits de `vg.hybrid()` — tanto diretos quanto via
+  grafo — retornam URLs de evidência populadas.
+
+## [0.19.2] - 2026-04-15
+
+### Adicionado
+
+- **`CreditsInfo` estendido para todos os endpoints pagos**: os 4
+  Results que ainda não tinham o campo `credits` agora o expõem
+  também. Lista completa dos 8 Results que suportam:
+
+  | Classe | Endpoint backend |
+  |---|---|
+  | `SearchResult` | `/sdk/search` |
+  | `SmartSearchResult` | `/sdk/smart-search` |
+  | `HybridResult` | `/sdk/hybrid` |
+  | `LookupResult` | `/sdk/lookup` |
+  | `MergedResult` (novo) | `/search/merged` |
+  | `FilesystemResult` (novo) | `/filesystem/search` |
+  | `GrepResult` (novo) | `/filesystem/grep` |
+  | `CanonicalResult` (novo) | `/filesystem/read/{doc_id}` |
+
+  Todos os 8 endpoints cobram créditos.
+
+  Endpoints SEM cobrança (não precisam de `credits`):
+  - `/sdk/documents` (listagem e detalhe)
+  - `/sdk/tokens` (estimativa)
+  - `/sdk/feedback` (like/dislike)
+
+  Mudança 100% aditiva. O campo `credits: Optional[CreditsInfo] = None`
+  está disponível em todos os Result types pagos.
+
+## [0.19.1] - 2026-04-15
+
+### Adicionado
+
+- **`CreditsInfo` exposto em `result.credits`** para `SearchResult`,
+  `HybridResult`, `LookupResult` e `SmartSearchResult`. Popula
+  automaticamente a partir dos headers HTTP `X-Credits-Cost`,
+  `X-Credits-Balance`, `X-Credits-Endpoint` que o backend envia em
+  toda chamada autenticada. Permite expor consumo de créditos ao
+  usuário sem fazer chamada extra a `/billing`:
+
+  ```python
+  result = vg.search("O que é ETP?")
+  if result.credits:
+      print(f"Custo: {result.credits.cost} créditos, "
+            f"saldo: {result.credits.balance}")
+  # Custo: 1 créditos, saldo: 68
+  ```
+
+  `result.credits` é `None` se o backend não enviar os headers
+  (endpoint legado ou não autenticado). A classe `CreditsInfo` tem
+  três campos: `cost` (int), `balance` (int), `endpoint` (str).
+
+  Inicialmente aplicado aos 4 Results principais (`SearchResult`,
+  `HybridResult`, `LookupResult`, `SmartSearchResult`). Os demais
+  Results (`GrepResult`, `FilesystemResult`, `MergedResult`,
+  `CanonicalResult`) recebem o campo na 0.19.2.
+
+- **`DocumentsResponse` agora é iterável, indexável e tem `len()`**:
+  quem usava `vg.list_documents()` precisava escrever
+  `for d in resp.documents: ...` porque o response era um wrapper
+  dataclass. Agora aceita diretamente:
+
+  ```python
+  resp = vg.list_documents()
+  for d in resp:          # itera sobre resp.documents
+      print(d.document_id)
+  print(resp[0])          # primeiro documento
+  print(len(resp))        # quantidade nesta pagina
+  if resp:                # True se ha documentos
+      ...
+  ```
+
+  Implementacao via `__iter__`, `__len__`, `__getitem__` e `__bool__`
+  delegando para `self.documents`. O atributo `.documents` continua
+  funcionando para quem ja usa — mudanca 100% aditiva.
+
+## [0.19.0] - 2026-04-14
+
+### Breaking
+
+Campos renomeados no response do SDK para nomes neutros:
+
+- `stats.direct_hits` no response do `/sdk/hybrid` (era um campo com
+  nome ligado a tecnologia interna)
+- `MergedHit.text_source` agora usa `"index"` como default
+- `MergedHit.graph_degree` (renomeado a partir de campo anterior)
+- Elemento XML `<direct_hits>` (substitui elementos anteriores)
+
+**Clientes que acessavam os campos antigos precisam atualizar.**
+Nenhum alias de compatibilidade foi adicionado.
+
+### Alterado
+
+- Documentação atualizada: termos neutros para descrever o sistema
+  ("busca semantica", "grafo de citacoes", "pipeline de analise em
+  3 etapas", "indice textual").
+
+### Acao necessaria
+
+O backend também foi atualizado em conjunto. Clientes rodando SDK
+< 0.19.0 contra o backend atualizado não quebram — só emitem
+`<direct_hits>` sem valor no XML.
+
 ## [0.18.1] - 2026-04-13
 
 ### Corrigido
@@ -14,19 +219,18 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 Auditoria sistematica do SDK espelhando a do CLI (v0.3.0). 6 bugs
 encontrados e corrigidos:
 
-1. **`lookup.match = None` para non-admin**: o backend aplica
-   `_strip_lookup_internals()` removendo `node_id`/`span_id` por
-   seguranca. O parser do SDK exigia `node_id` para construir o
-   `Hit`, entao `match` ficava None mesmo com `status=found` e
-   `text` presente no response. Fix: aceitar match_data flat quando
-   tiver `status=found` e `text`, independente de node_id. Agora
-   `result.match.text` retorna o artigo completo (stitched pelo
-   backend para artigos).
+1. **`lookup.match = None` quando o response omitia IDs internos**: o
+   backend pode omitir `node_id`/`span_id` no response público. O
+   parser do SDK exigia `node_id` para construir o `Hit`, então
+   `match` ficava None mesmo com `status=found` e `text` presente.
+   Fix: aceitar match_data flat quando tiver `status=found` e `text`,
+   independente de node_id. Agora `result.match.text` retorna o
+   artigo completo (stitched pelo backend para artigos).
 
-2. **`hybrid` sem fallback para `graph_nodes`**: quando o reranker
-   achava os seeds fracos, o backend nao populava `direct_evidence`
-   (`hits=[]`), mesmo com `graph_nodes` contendo resultados
-   relevantes. `for hit in vg.hybrid(...)` iterava sobre lista vazia.
+2. **`hybrid` sem fallback para `graph_nodes`**: quando o backend
+   considerava os hits diretos pouco relevantes, o response retornava
+   `hits=[]` mesmo com `graph_nodes` contendo resultados relevantes.
+   `for hit in vg.hybrid(...)` iterava sobre lista vazia.
    Fix: nova property `HybridResult.all_hits` que retorna
    `hits if hits else graph_nodes`. `__iter__`, `__len__` e
    `__getitem__` agora usam `all_hits` para UX consistente. Quem
@@ -112,14 +316,12 @@ encontrados e corrigidos:
   `result.request_id` — `query_id` é determinístico (mesma query gera o
   mesmo valor entre clientes), portanto inadequado como ID de tracking.
 
-### Infraestrutura
+### Notas
 
-- `_http.py` captura `X-Request-ID` do header em `request()`,
-  `post_multipart()` e `stream()`, injetando no dict retornado como
-  fallback quando o body JSON não traz o campo. Body tem precedência
-  sobre header (compatível com endpoints legado ou não instrumentados).
-- `_handle_error()` propaga `request_id` para o construtor das exceções
-  (body JSON de erro > header `X-Request-ID`).
+- O cliente HTTP captura o header `X-Request-ID` automaticamente
+  e injeta no Result quando o body JSON não traz o campo. Body tem
+  precedência sobre header (compatível com endpoints legados).
+- Exceções do SDK também propagam `request_id` quando disponível.
 
 ## [0.17.3] - 2026-04-12
 
@@ -140,9 +342,8 @@ interno do backend. Não há mudanças de comportamento nem quebra de API públi
   - `MergedHit` — resultados da busca dual-path (hybrid + filesystem)
   - `LookupResult` — resultado de lookup de dispositivo normativo
 
-- Parsers atualizados em `client.py` para extrair esses campos do
-  response JSON do backend em `grep()`, `filesystem_search()`,
-  `merged()` e `_parse_lookup_response()`
+- Parsers internos atualizados para extrair esses campos do response
+  em `grep()`, `filesystem_search()`, `merged()` e `lookup()`.
 
 ### Notas
 
@@ -170,22 +371,23 @@ Campos sao `Optional[str]` com default `None` — backwards compatible.
 
 ### Corrigido (API-side — refletido no SDK)
 
-- **`search().cached` e `smart_search().cached` agora funcionam**: Para usuarios
-  nao-admin, o campo `cached` era removido da resposta pelo strip interno,
-  fazendo o SDK sempre ver `cached=False` mesmo quando a resposta vinha do cache.
+- **`search().cached` e `smart_search().cached` agora funcionam**: o campo
+  `cached` era removido da resposta publica pelo strip interno, fazendo o
+  SDK sempre ver `cached=False` mesmo quando a resposta vinha do cache.
   Correcao: `cached` removido dos sets `_SDK_SEARCH_ROOT_INTERNAL` e
-  `_SMART_SEARCH_ROOT_INTERNAL` — e agora campo publico legitimo.
+  `_SMART_SEARCH_ROOT_INTERNAL` — agora e campo publico legitimo.
 
 - **SearchService Lane C (cache semantico)**: A inicializacao do cache async
   em `_ensure_async_resources()` chamava `get_semantic_cache_async()` SEM o
   argumento obrigatorio `remote_embedder`, causando `TypeError` silencioso
   e deixando `_semantic_cache=None`. Correcao: passa `self._remote_embedder`.
 
-- **`hybrid()` — queries nonsense retornavam graph_nodes**: Apos a reducao
-  do `MIN_HYBRID_SCORE` para 0.001, queries sem sentido continuavam retornando
-  graph_nodes porque o safety_net do reranker mantinha top-3 mesmo com score ~0.
-  Correcao: deteccao de nonsense via `rerank_score < 0.01` — se o reranker
-  considerou tudo irrelevante, retorna `hits=[]` E `graph_nodes=[]`.
+- **`hybrid()` — queries nonsense retornavam graph_nodes**: queries
+  sem sentido continuavam retornando hits via expansao de grafo
+  mesmo quando o backend julgava todos os resultados irrelevantes.
+  Correcao: deteccao de nonsense por threshold de score — se o
+  backend considerou tudo irrelevante, retorna `hits=[]` E
+  `graph_nodes=[]`.
 
 ### Notas de comportamento
 
@@ -201,7 +403,7 @@ Campos sao `Optional[str]` com default `None` — backwards compatible.
 - **`hybrid()` — hops=2 funciona**: Expansao de grafo com 2 saltos agora retorna nos de hop 1 e 2 (antes fixo em 1)
 - **`hybrid()` — graph nodes com metadados**: Nos expandidos agora incluem `node_id`, `span_id`, `tipo_documento` preenchidos (antes vinham vazios)
 - **`hybrid()` — score filter**: Hits diretos com score < 0.01 sao filtrados; queries sem sentido retornam lista vazia
-- **`merged()` — mutual_count**: Agora retorna `int >= 0` (antes retornava `None` para usuarios nao-admin)
+- **`merged()` — mutual_count**: Agora retorna `int >= 0` (antes retornava `None` no response publico)
 - **`merged()` — threshold adaptativo**: Queries sem sentido retornam lista vazia (threshold RRF adaptativo)
 - **`lookup()` — crash com "Inciso"**: `vg.lookup("Art. 24, Inciso 2o")` nao causa mais HTTP 500; retorna status `ambiguous`
 - **`search()` — score filter**: Resultados com score < 0.01 sao filtrados (queries nonsense retornam lista vazia)
@@ -816,7 +1018,7 @@ results = vg.search("O que é ETP?", use_cache=True)
 
 ### Adicionado
 
-- **Consulta de Documentos** - Novos métodos para consultar a base de conhecimento:
+- **Gerenciamento de Documentos** - Novos métodos para consultar a base de conhecimento:
   - `list_documents(page, limit)` - Lista documentos disponíveis (paginado)
   - `get_document(document_id)` - Detalhes de um documento específico
 

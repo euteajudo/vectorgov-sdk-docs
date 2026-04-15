@@ -1,0 +1,100 @@
+site_name: VectorGov SDK
+site_url: https://docs.vectorgov.io
+site_description: SDK Python para acessar bases de conhecimento jurídico VectorGov
+site_author: VectorGov
+
+repo_name: euteajudo/vectorgov-sdk-docs
+repo_url: https://github.com/euteajudo/vectorgov-sdk-docs
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Modo escuro
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Modo claro
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search:
+      lang: pt
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            show_root_heading: true
+            show_category_heading: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Início: index.md
+  - Cheat Sheet: cheat-sheet.md
+  - Reference de Métodos: api/methods.md
+  - Modelos de Dados: api/models.md
+  - Integrações:
+    - integrations/index.md
+    - OpenAI: integrations/openai.md
+    - Anthropic Claude: integrations/anthropic.md
+    - Google Gemini: integrations/gemini.md
+    - Ollama: integrations/ollama.md
+    - HuggingFace Transformers: integrations/transformers.md
+    - LangChain: integrations/langchain.md
+    - LangGraph: integrations/langgraph.md
+    - Google ADK: integrations/google-adk.md
+    - MCP Server: integrations/mcp.md
+  - Guias:
+    - Busca Avançada: guides/advanced-search.md
+    - System Prompts: guides/system-prompts.md
+    - Observabilidade e Auditoria: guides/observability-audit.md
+    - Tratamento de Erros: guides/error-handling.md
+  - LLM Reference (single-page): llm-reference.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vectorgov
+  version:
+    provider: mike
