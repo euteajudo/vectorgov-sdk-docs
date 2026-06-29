@@ -121,7 +121,7 @@ for block in response.content:
         print(vg.execute_tool_call(block))
 ```
 
-> 🍳 **Mais receitas**: [README](https://github.com/euteajudo/vectorgov-sdk#-receitas-comuns) tem 7, [cheat-sheet](cheat-sheet.md#10-padroes-idiomaticos) tem 10.
+> 🍳 **Mais receitas**: [README](https://github.com/euteajudo/vectorgov-sdk#-receitas-comuns) tem 7, [cheat-sheet](cheat-sheet.md#padroes-idiomaticos) tem 11.
 
 ---
 

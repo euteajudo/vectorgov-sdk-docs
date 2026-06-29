@@ -70,7 +70,7 @@ print(response2)
 | `llama3.2:3b` | 4GB | Boa | Muito Bom | `ollama pull llama3.2:3b` |
 | `llama3:8b` | 8GB | Muito Boa | **Excelente** | `ollama pull llama3:8b` |
 | `mistral:7b` | 7GB | Muito Boa | Bom | `ollama pull mistral:7b` |
-| `qwen2.5:7b` | 7GB | Excelente | Bom | `ollama pull qwen2.5:7b` |
+| `gemma2:9b` | 9GB | Excelente | Bom | `ollama pull gemma2:9b` |
 
 ```python
 from vectorgov.integrations.ollama import list_models, get_recommended_models

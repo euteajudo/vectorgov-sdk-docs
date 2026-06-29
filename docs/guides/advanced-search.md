@@ -119,6 +119,48 @@ for node in result.graph_expansion:
 
 **Tipos de relação no grafo:** CITA, REGULAMENTA, COMPLEMENTA, EXCEPCIONA, DEPENDE_DE, ALTERA_EXPRESSAMENTE, REVOGA_EXPRESSAMENTE, INTERPRETA.
 
+### payload_coverage — cobertura vs. tokens (perguntas multi-dispositivo)
+
+> Disponível desde a v0.20.0.
+
+Perguntas **multi-dispositivo** — as que só se respondem com vários artigos/incisos
+(ex.: *"quais os critérios de julgamento?"*, *"quais as hipóteses de dispensa?"*) —
+ganham **completude** com uma janela de entrega maior. Por isso o `hybrid()` aceita
+`payload_coverage`:
+
+| modo | entrega | quando usar |
+|------|---------|-------------|
+| `"strict@10"` (default) | lean | dispositivo único; resposta direta de LLM |
+| `"strict@20"` | wide | **multi-dispositivo**; recall/revisão humana |
+
+```python
+# Pergunta multi-dispositivo → mais completude:
+r = vg.hybrid("Quais os critérios de julgamento?", payload_coverage="strict@20")
+
+# O preço da cobertura é medível — o payload carrega a contagem:
+print(r.payload_coverage)       # "strict@20"
+print(r.token_count_estimate)   # ~2372 tokens (vs ~1609 no strict@10)
+```
+
+No golden interno, o modo wide subiu **+0,231 de cobertura** na categoria
+multi-dispositivo (vs +0,127 no geral), **sem regressão**, ao custo de **~1,7× mais
+tokens**. Como o ganho é de *cobertura* (presença dos dispositivos) e não
+necessariamente de *qualidade da resposta de um LLM* (janelas grandes sofrem de
+*lost-in-middle*), o default permanece `strict@10` — ligue o wide quando o caso é
+recall/revisão, não resposta automática.
+
+**O que o `token_count_estimate` mede (importante para orçar contexto):** é o
+**payload COMPLETO** que vai ao LLM, **não apenas o texto da lei**. Cada chunk é o
+*veículo* que transporta também a **nota do especialista** (`nota_especialista`) e a
+**jurisprudência vinculada** (`jurisprudencia_tcu`), além de cabeçalhos estruturais.
+Ou seja, o total = **lei + curadoria + estrutura** — todos já contemplados no número.
+Ao dimensionar o contexto, lembre que a curadoria pode somar tokens além do texto
+legal.
+
+> **No CLI:** o mesmo controle é a flag `--payload-coverage` do comando `hybrid`
+> (ex.: `vectorgov hybrid "Quais os critérios de julgamento?" --payload-coverage strict@20`).
+> Default `strict@10`.
+
 ## 4. `lookup()` — Consulta Direta por Referência
 
 Busca determinística por referência textual. Retorna o texto exato do dispositivo com contexto hierárquico (pai, filhos, irmãos).
@@ -172,7 +214,7 @@ result = vg.grep("art. 75", document_id="LEI-14133-2021", max_results=5)
 
 ## 6. `filesystem_search()` — Índice Curado
 
-Busca no índice PostgreSQL + ripgrep. O modo `auto` detecta se a query é referência legal ou texto livre.
+Busca no índice textual curado. O modo `auto` detecta se a query é referência legal ou texto livre.
 
 ```python
 # Auto-detecta tipo de query

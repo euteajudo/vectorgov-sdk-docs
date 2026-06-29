@@ -14,7 +14,7 @@ VectorGov fornece chunks jurídicos prontos para alimentar **qualquer LLM ou fra
 
 | | | |
 |---|---|---|
-| 🦙 [**Ollama**](ollama.md) | llama3, mistral, qwen2.5 (recomendado) | nenhum extra |
+| 🦙 [**Ollama**](ollama.md) | llama3, mistral, gemma2 (recomendado) | nenhum extra |
 | 🤗 [**HuggingFace Transformers**](transformers.md) | qualquer modelo do Hub | `pip install 'vectorgov[transformers]'` |
 
 ## Frameworks de agentes
