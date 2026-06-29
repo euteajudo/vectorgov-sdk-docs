@@ -7,7 +7,7 @@ para o LLM, útil para:
 - Verificar se o contexto cabe na janela de contexto do modelo
 - Otimizar o número de resultados retornados
 
-A contagem de tokens é feita no servidor VectorGov usando tiktoken,
+A contagem de tokens é feita no servidor VectorGov,
 garantindo precisão sem necessidade de dependências extras no cliente.
 
 Requisitos:

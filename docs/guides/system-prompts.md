@@ -289,15 +289,13 @@ else:
 ### 4. Monitore Tokens Consumidos
 
 ```python
-import tiktoken
-
-def count_tokens(messages, model="gpt-4o"):
-    enc = tiktoken.encoding_for_model(model)
-    return sum(len(enc.encode(m["content"])) for m in messages)
-
-messages = results.to_messages("O que é ETP?")
-tokens = count_tokens(messages)
-print(f"Esta requisição consumirá ~{tokens} tokens de input")
+# Estimativa server-side, sem dependências extras no cliente
+stats = vg.estimate_tokens(
+    results,
+    query="O que é ETP?",
+    system_prompt=vg.get_system_prompt(),
+)
+print(f"Esta requisição consumirá ~{stats.total_tokens} tokens de input")
 ```
 
 ---

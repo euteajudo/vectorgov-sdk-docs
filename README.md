@@ -8,12 +8,14 @@ Acesse leis, decretos e instruções normativas com chunks prontos para alimenta
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Novidades**:
+> **Novidades** (atual: **0.21.1**):
+> - **0.21.1** — `graph_nodes` do `hybrid()` com `source` e metadados formatados como nos hits diretos
+> - **0.21.0** — flags `include_nota` / `include_jurisprudencia` / `include_proveniencia` / `include_links` para enxugar o payload (mantendo sempre o texto da lei)
+> - **0.20.2** — telemetria de tokens (`token_count_estimate` / `token_count_breakdown` / `payload_coverage`) em todos os resultados de busca
+> - **0.20.0** — `payload_coverage` (`strict@10` / `strict@20`) no `hybrid()`: cobertura vs. tokens em perguntas multi-dispositivo
+> - **0.19.7** — `GrepMatch.source` / `MergedHit.source` (alias de `citation`)
 > - **0.19.6** — ⚠️ BREAKING: `vg.store_response()` removido (endpoint descontinuado). Use `result.query_id` direto em `vg.feedback()` ([CHANGELOG](CHANGELOG.md#0196---2026-04-15))
-> - **0.19.5** — `to_context()` e builders XML/markdown usam `citation` no formato jurídico
 > - **0.19.4** — campo `citation` em todos os Result types (`Art. 75 da Lei 14.133/2021`) — pronto para LLMs
-> - **0.19.2** — créditos em todos os 8 endpoints pagos
-> - **0.19.0** — IDs internos de implementação removidos do response público
 
 ---
 

@@ -38,7 +38,7 @@ print(resposta.sources)
 | `meta-llama/Llama-3.2-1B-Instruct` | 1B | fp16 | Básica |
 | `meta-llama/Llama-3.2-3B-Instruct` | 3B | fp16 | Boa |
 | `meta-llama/Llama-3.1-8B-Instruct` | 8B | int4 (4GB VRAM) | Muito Boa |
-| `Qwen/Qwen2.5-7B-Instruct` | 7B | int4 | Excelente |
+| `mistralai/Mistral-7B-Instruct-v0.3` | 7B | int4 | Excelente |
 
 ## CPU-only (sem GPU)
 

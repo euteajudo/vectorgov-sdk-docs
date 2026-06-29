@@ -1,6 +1,6 @@
 # Modelos e Exceções — Referência Completa
 
-> Atualizado para v0.16.0 (Março 2026)
+> Atualizado para v0.21.1 (Junho 2026)
 
 ## Resultados de Busca
 
@@ -89,7 +89,12 @@ for node in result.graph_expansion:
 | `direct_evidence` | `list[Hit]` | Resultados da busca semântica |
 | `graph_expansion` | `list[dict]` | Nós expandidos via grafo (hop, frequency, paths, text) |
 | `stats` | `dict` | Estatísticas (seeds_count, graph_nodes, total_tokens, truncated) |
+| `payload_coverage` <sup>v0.20.0</sup> | `str\|None` | Modo de entrega efetivo (`"strict@10"`/`"strict@20"`) |
+| `token_count_estimate` <sup>v0.20.0</sup> | `int\|None` | Tokens do payload completo entregue ao LLM |
+| `token_count_breakdown` <sup>v0.20.1</sup> | `dict\|None` | Decomposição: `{law_chunks, curadoria, structure}` |
 | + campos de `BaseResult` | | |
+
+Ver [Telemetria de tokens no payload](#telemetria-de-tokens-no-payload) para a semântica dos três campos de telemetria.
 
 ---
 
@@ -392,6 +397,47 @@ Retornado por `vg.estimate_tokens()`.
 | `total_tokens` | `int` | Soma total |
 | `char_count` | `int` | Caracteres totais |
 | `encoding` | `str` | Encoding usado (cl100k_base) |
+
+---
+
+### Telemetria de tokens no payload
+
+> Disponível em `HybridResult` desde a v0.20.0 e nos demais resultados de busca desde a v0.20.2.
+
+Diferente do `TokenStats` (que você pede sob demanda via `estimate_tokens()`),
+estes campos vêm **embutidos no próprio resultado de busca** e descrevem o custo,
+em tokens, do payload que aquele resultado entrega ao LLM. Disponíveis em
+`HybridResult` (desde v0.20.0) e, a partir da v0.20.2, também em `SearchResult`,
+`SmartSearchResult`, `LookupResult`, `GrepResult`, `FilesystemResult` e
+`MergedResult`. São populados quando o backend correspondente os emite; caso
+contrário ficam `None`.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `token_count_estimate` | `int\|None` | Estimativa de tokens do **payload completo** entregue ao LLM — **não só o texto da lei**. Contagem compatível com a tokenização dos principais LLMs (família GPT-4/Claude). |
+| `token_count_breakdown` | `dict\|None` | Decomposição da estimativa (a soma das partes == `token_count_estimate`): `law_chunks` (texto legal), `curadoria` (nota do especialista + jurisprudência vinculada) e `structure` (cabeçalhos/separadores). |
+| `payload_coverage` | `str\|None` | Modo de entrega efetivo do payload: `"strict@10"` (lean, default) ou `"strict@20"` (wide). Só `hybrid()` aceita escolher o modo; nos demais resultados o campo apenas ecoa o modo aplicado pelo backend. |
+
+Além desses atributos tipados, o payload bruto (`result._raw_response` /
+`to_dict()`) pode trazer `token_count_method` — uma string identificando o método
+de contagem usado pelo backend. Use-o apenas como rótulo informativo.
+
+**Por que separar lei × curadoria?** O chunk é o *veículo* que transporta, além do
+texto do dispositivo, a curadoria (nota do especialista, jurisprudência) e os
+cabeçalhos estruturais. O `token_count_breakdown` permite orçar **quanto do payload
+é lei vs. curadoria** antes de mandar para o LLM:
+
+```python
+r = vg.hybrid("Quais os critérios de julgamento?", payload_coverage="strict@20")
+
+print(r.token_count_estimate)    # ex.: 2372  (payload completo)
+print(r.payload_coverage)        # "strict@20"
+print(r.token_count_breakdown)   # {"law_chunks": 1856, "curadoria": 0, "structure": 516}
+
+# o mesmo trio aparece nos outros resultados (v0.20.2+):
+s = vg.search("dispensa de licitação")
+print(s.token_count_estimate, s.token_count_breakdown)
+```
 
 ---
 

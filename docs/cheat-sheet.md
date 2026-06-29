@@ -78,7 +78,7 @@ graph TD
 |---|---|---|---|---|
 | `search(query, mode, top_k, ...)` | `SearchResult` | `POST /sdk/search` | 💰 | Busca semântica padrão (3 modos) |
 | `smart_search(query)` | `SmartSearchResult` | `POST /sdk/smart-search` | 💰💰 | Pipeline com Juiz LLM, dispositivos relacionados |
-| `hybrid(query, hops)` | `HybridResult` | `POST /sdk/hybrid` | 💰 | Semântica + expansão por grafo de citações |
+| `hybrid(query, hops, payload_coverage)` | `HybridResult` | `POST /sdk/hybrid` | 💰 | Semântica + expansão por grafo de citações |
 | `lookup(reference)` | `LookupResult` | `POST /sdk/lookup` | 💰 | Resolve "Art. 75 da Lei 14.133" → dispositivo exato |
 | `grep(query)` | `GrepResult` | `POST /filesystem/grep` | 💰 | Busca textual exata via ripgrep |
 | `filesystem_search(query, mode)` | `FilesystemResult` | `POST /filesystem/search` | 💰 | Índice curado determinístico |
@@ -131,7 +131,7 @@ graph TD
 
 ---
 
-## 🍳 10 padrões idiomáticos
+## 🍳 11 padrões idiomáticos
 
 ### 1. Iniciar o cliente (3 formas)
 
@@ -231,6 +231,22 @@ critical = vg.get_audit_logs(severity="critical", limit=100)
 for log in critical.logs:
     print(f"{log.timestamp} [{log.event_type}] {log.action_taken}")
 ```
+
+### 11. Cobertura vs. tokens em perguntas multi-dispositivo (0.20.0+)
+
+```python
+# Pergunta multi-dispositivo → mais cobertura (custa ~1,7× tokens):
+r = vg.hybrid("Quais os critérios de julgamento?", payload_coverage="strict@20")
+
+print(r.payload_coverage)        # "strict@20" (default é "strict@10")
+print(r.token_count_estimate)    # tokens do payload COMPLETO (lei + curadoria + estrutura)
+print(r.token_count_breakdown)   # {"law_chunks": ..., "curadoria": ..., "structure": ...}
+```
+
+> `strict@20` aumenta a *cobertura* (presença dos dispositivos), não a qualidade da
+> resposta de um LLM (*lost-in-middle*) — use para recall/revisão. A telemetria de
+> tokens (`token_count_estimate`/`token_count_breakdown`) também aparece em
+> `search`, `lookup`, `grep`, `filesystem_search` e `merged` a partir da 0.20.2.
 
 ---
 

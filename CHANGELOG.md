@@ -7,6 +7,149 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+## [0.21.1] - 2026-06-28
+
+### Corrigido
+
+- **`graph_nodes` (expansão por grafo do `hybrid`) com `source` e metadados
+  legíveis**: o parser montava o `Hit` de grafo com `source` igual ao
+  `document_id` cru e `Metadata` vazio (`document_number=""`, `year=0`). Agora os
+  nós expandidos carregam os mesmos campos dos hits diretos
+  (`tipo_documento`/`numero`/`ano`/`article_number`), então o `source` sai
+  formatado como nos seeds — ex.: `"DECRETO 8.538/2015, Art. 1"` em vez de
+  `"DECRETO-8.538-2015"`.
+
+## [0.21.0] - 2026-06-28
+
+### Adicionado
+
+- **Flags para suprimir features complementares do payload** (`include_nota`,
+  `include_jurisprudencia`, `include_proveniencia`, `include_links`; default
+  `True`) em `search`, `smart_search`, `hybrid`, `merged`, `lookup`, `grep` e
+  `filesystem_search` (e nos wrappers async). Permitem desligar localmente cada
+  bloco complementar do payload entregue ao LLM, **mantendo sempre o texto do
+  dispositivo**. Default = payload completo (tudo ligado).
+  - As 4 features: **nota** do especialista (`Hit.nota_especialista`),
+    **jurisprudência** vinculada (`jurisprudencia_tcu`/`acordao_tcu_*`),
+    **proveniência** (`origin_*`) e **links** de evidência
+    (`evidence_url`/`document_url`/`page_number` + a trilha verificável
+    reconstruída no XML).
+  - Supressão 100% **local** (após o parse): a API continua entregando o payload
+    completo e nenhuma flag é enviada na requisição. Cobre todas as superfícies
+    de serialização — `to_context`, `to_messages`, `to_prompt`, `to_xml`,
+    `to_markdown` e `to_dict` (incl. `_raw_response`).
+  - `include_links=False` também omite o mapa de evidências e a trilha
+    verificável, preservando a lista de dispositivos autorizados (controle de
+    citação).
+  - Integrações (LangChain/LangGraph/Google ADK/Ollama/Transformers) e o
+    servidor MCP propagam as flags; onde a integração não emite a feature, a
+    flag é um no-op documentado. O MCP lê `VECTORGOV_INCLUDE_*` do ambiente.
+
+  ```python
+  # Só o texto da lei: sem nota, sem jurisprudência, sem links — payload mínimo
+  r = vg.hybrid(
+      "Quais os critérios de julgamento?",
+      include_nota=False,
+      include_jurisprudencia=False,
+      include_links=False,
+  )
+  ```
+
+### Corrigido
+
+- `lookup` agora respeita `include_nota`/`include_jurisprudencia`/
+  `include_proveniencia` (antes só `include_links`), filtrando o payload bruto
+  (top-level + `match`/`parent`/`siblings`/`children`) e os objetos tipados.
+
+## [0.20.2] - 2026-06-27
+
+### Adicionado
+
+- **Telemetria de tokens em TODOS os resultados de busca** (antes só em
+  `HybridResult`): `token_count_estimate`, `token_count_breakdown` e
+  `payload_coverage` agora também em `SearchResult`, `SmartSearchResult`,
+  `LookupResult`, `GrepResult`, `FilesystemResult` e `MergedResult`. Mesma
+  semântica do `HybridResult` — `token_count_breakdown = {law_chunks, curadoria,
+  structure}` (a soma das partes == estimativa). São populados quando o backend
+  correspondente os emite; caso contrário ficam `None`.
+- `MergedResult` mantém `token_total`/`token_budget` (orçamento legado) **ao
+  lado** dos novos campos do contrato unificado.
+
+## [0.20.1] - 2026-06-26
+
+### Adicionado
+
+- **`HybridResult.token_count_breakdown`** — decomposição do
+  `token_count_estimate` (a soma das partes == total). Como o chunk transporta
+  mais que a lei, o custo em tokens vem separado:
+  - `law_chunks` — texto legal (os artigos/incisos)
+  - `curadoria` — nota do especialista + jurisprudência vinculada
+  - `structure` — cabeçalhos e separadores do contexto
+
+  Permite ao cliente orçar **quanto do payload é lei vs. curadoria**.
+
+  ```python
+  r = vg.hybrid("Quais os critérios de julgamento?", payload_coverage="strict@20")
+  print(r.token_count_breakdown)
+  # {"law_chunks": 1856, "curadoria": 0, "structure": 516}  (soma == token_count_estimate)
+  ```
+
+## [0.20.0] - 2026-06-26
+
+### Adicionado
+
+- **`payload_coverage` em `hybrid()`** — modo de entrega do payload escolhível
+  pelo cliente: `"strict@10"` (lean, **default**) ou `"strict@20"` (wide). O modo
+  wide entrega mais cobertura (no golden interno: +0,127 de cobertura no geral,
+  +0,231 na categoria multi-dispositivo) ao custo de **~1,7× tokens**. **Não
+  melhora a resposta gerada por um LLM** (janelas grandes sofrem de
+  *lost-in-middle*) — serve casos de recall/revisão humana. Zero regressão;
+  default inalterado (`strict@10`).
+- **`HybridResult.token_count_estimate`** — estimativa dos tokens do payload
+  entregue ao LLM (contagem compatível com a tokenização dos principais LLMs),
+  para o cliente pesar o trade-off cobertura × tokens com o número na mão.
+- **`HybridResult.payload_coverage`** — eco do modo de entrega efetivo.
+
+  **Quando usar `strict@20`:** perguntas **multi-dispositivo** (que se respondem
+  com vários artigos/incisos — ex.: "quais os critérios de julgamento?")
+  apresentaram completude sensivelmente maior no modo wide. Para perguntas de
+  dispositivo único, o default `strict@10` já basta.
+
+  ```python
+  # completude maior em perguntas multi-dispositivo (custa mais tokens):
+  r = vg.hybrid("Quais os critérios de julgamento?", payload_coverage="strict@20")
+  print(r.token_count_estimate)   # ~2372 — o preço da cobertura maior (vs ~1609 no @10)
+  print(r.payload_coverage)       # "strict@20"
+  ```
+
+  **Sobre o `token_count_estimate`:** o número é o **payload COMPLETO** entregue
+  ao LLM — **não só o texto da lei**. Cada chunk é o veículo que transporta
+  também a **nota do especialista** (`nota_especialista`) e a **jurisprudência
+  vinculada** (`jurisprudencia_tcu`), além dos cabeçalhos estruturais. Logo a
+  contagem reflete **lei + curadoria + estrutura**.
+
+## [0.19.7] - 2026-04-20
+
+### Adicionado
+
+- **`GrepMatch.source` e `MergedHit.source`** (properties): alias para
+  `citation`, mantendo paridade de API com `Hit.source`. Permite código
+  idiomático funcionar igual em todos os métodos de busca:
+
+  ```python
+  # Agora funciona em grep() e merged() sem AttributeError
+  for hit in vg.grep("dispensa", document_id="LEI-14133-2021"):
+      print(f"{hit.source}: {hit.text}")
+  ```
+
+  Antes (v0.19.6 e anteriores), o código acima levantava
+  `AttributeError: 'GrepMatch' object has no attribute 'source'`
+  porque `source` só existia em `Hit` (retornado por `search/hybrid`).
+
+  **Nota sobre `MergedHit`**: `hit.source` (singular, novo) é alias para
+  `citation`. Não confundir com `hit.sources` (plural, existente) que é
+  `list[str]` com as fontes que retornaram o hit.
+
 ## [0.19.6] - 2026-04-15
 
 ### Removido (BREAKING)
@@ -789,7 +932,7 @@ Texto completo do art. 18 da Lei 14.133...
 - **Contagem de Tokens (Server-Side)** - Estimar tokens antes de enviar para o LLM:
   - `vg.estimate_tokens(content)` - Método no cliente para estimar tokens
   - Aceita `SearchResult` ou `str` como entrada
-  - A contagem é feita no servidor usando tiktoken, garantindo precisão sem dependências extras no cliente
+  - A contagem é feita no servidor, garantindo precisão sem dependências extras no cliente
   - Novo modelo `TokenStats` com campos:
     - `context_tokens` - Tokens do contexto (hits formatados)
     - `system_tokens` - Tokens do system prompt
@@ -1251,7 +1394,14 @@ results = vg.search("O que é ETP?", use_cache=True)
 - Retry automático com backoff exponencial
 - Timeout configurável
 
-[Unreleased]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.21.1...HEAD
+[0.21.1]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.21.0...v0.21.1
+[0.21.0]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.20.2...v0.21.0
+[0.20.2]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.20.1...v0.20.2
+[0.20.1]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.20.0...v0.20.1
+[0.20.0]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.19.7...v0.20.0
+[0.19.7]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.19.6...v0.19.7
+[0.19.6]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.15.0...v0.19.6
 [0.15.0]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/euteajudo/vectorgov-sdk/compare/v0.12.0...v0.13.0

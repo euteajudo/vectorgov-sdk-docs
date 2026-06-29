@@ -231,8 +231,22 @@ for node in result.graph_nodes:
 | `hops` | `int` | `1` | Profundidade do grafo (1 ou 2) |
 | `graph_expansion` | `"bidirectional" \| "forward"` | `"bidirectional"` | Direção da expansão |
 | `token_budget` | `int` | `6000` | Budget total de tokens |
-| `use_cache` | `bool` | `None` |
-| `trace_id` | `str` | `None` |
+| `payload_coverage` <sup>v0.20.0</sup> | `"strict@10" \| "strict@20"` | `"strict@10"` | Modo de entrega do payload: lean (default) ou wide (mais cobertura, ~1,7× tokens) |
+| `use_cache` | `bool` | `None` | Cache semântico |
+| `trace_id` | `str` | `None` | ID externo para rastreamento |
+
+`payload_coverage="strict@20"` (wide) é indicado para perguntas
+**multi-dispositivo** (que se respondem com vários artigos/incisos). Entrega mais
+cobertura ao custo de ~1,7× tokens e **não** melhora a resposta gerada por um LLM
+(efeito *lost-in-middle*) — por isso o default é `strict@10`. Ver
+[Guia: busca avançada](../guides/advanced-search.md#payload_coverage-cobertura-vs-tokens-perguntas-multi-dispositivo).
+No CLI, o equivalente é a flag `--payload-coverage` do comando `hybrid`.
+
+> **Supressão de features** <sup>v0.21.0</sup>: `hybrid` (e os demais métodos de
+> busca) aceitam `include_nota`, `include_jurisprudencia`, `include_proveniencia`
+> e `include_links` (default `True`) para desligar localmente cada bloco
+> complementar do payload, **mantendo sempre o texto do dispositivo**. A filtragem
+> é local (a API continua entregando o payload completo).
 
 #### Retorno
 
@@ -243,6 +257,13 @@ for node in result.graph_nodes:
 - `stats: dict` — `seeds_count`, `graph_nodes_count`, `total_tokens`
 - `confidence: float`
 - `latency_ms: float`
+- `payload_coverage: str \| None` <sup>v0.20.0</sup> — modo de entrega efetivo (`"strict@10"`/`"strict@20"`)
+- `token_count_estimate: int \| None` <sup>v0.20.0</sup> — estimativa de tokens do payload **completo** entregue ao LLM (lei + curadoria + estrutura)
+- `token_count_breakdown: dict \| None` <sup>v0.20.1</sup> — decomposição da estimativa: `{law_chunks, curadoria, structure}` (a soma == `token_count_estimate`)
+
+> A telemetria de tokens (`token_count_estimate`, `token_count_breakdown`,
+> `payload_coverage`) também é exposta nos demais resultados de busca a partir da
+> v0.20.2. Ver [models.md — Telemetria de tokens](models.md#telemetria-de-tokens-no-payload).
 
 #### Exemplo avançado
 
