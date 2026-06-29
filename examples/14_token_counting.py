@@ -15,7 +15,7 @@ Requisitos:
 """
 
 import os
-from vectorgov import VectorGov, TokenStats
+from vectorgov import VectorGov
 
 # Configuração
 api_key = os.getenv("VECTORGOV_API_KEY", "vg_sua_chave")
