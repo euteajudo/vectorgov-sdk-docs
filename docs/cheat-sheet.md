@@ -131,7 +131,7 @@ graph TD
 
 ---
 
-## 🍳 11 padrões idiomáticos
+## 🍳 Padrões idiomáticos
 
 ### 1. Iniciar o cliente (3 formas)
 

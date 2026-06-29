@@ -251,7 +251,7 @@ for log in critical.logs:
     print(f"{log.timestamp} [{log.event_type}] {log.action_taken}")
 ```
 
-> 🍳 **Mais receitas**: [docs/cheat-sheet.md](docs/cheat-sheet.md#-10-padrões-idiomáticos) tem 10 padrões idiomáticos completos.
+> 🍳 **Mais receitas**: [docs/cheat-sheet.md](docs/cheat-sheet.md) tem 11 padrões idiomáticos completos.
 
 ---
 
