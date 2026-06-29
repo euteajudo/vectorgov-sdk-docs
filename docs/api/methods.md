@@ -6,6 +6,38 @@
 
 ---
 
+## 🎛️ Flags de supressão de payload
+
+> Disponível na **0.21.0**.
+
+Os métodos de busca aceitam 4 kwargs booleanos (default `True`) que controlam quais
+features complementares acompanham o chunk da lei no payload enviado ao LLM.
+**Default = payload completo.** O **texto do dispositivo nunca é removido**, e a
+filtragem é **local** (a API continua entregando o payload completo).
+
+| Flag | Default | Desliga |
+|---|---|---|
+| `include_nota` | `True` | Nota do especialista (`nota_especialista`) |
+| `include_jurisprudencia` | `True` | Jurisprudência relacionada (`jurisprudencia_tcu`, `acordao_tcu_key`, `acordao_tcu_link`) |
+| `include_proveniencia` | `True` | Proveniência normativa (`origin_type`, `origin_reference`, …) |
+| `include_links` | `True` | Links de evidência (`evidence_url`, `document_url`, trilha verificável) |
+
+Disponíveis em `search`, `smart_search`, `hybrid`, `merged`, `lookup`, `grep` e
+`filesystem_search`.
+
+```python
+# só o texto da lei — sem nota/jurisprudência/proveniência/links
+results = vg.search(
+    "dispensa de licitação",
+    include_nota=False,
+    include_jurisprudencia=False,
+    include_proveniencia=False,
+    include_links=False,
+)
+```
+
+---
+
 ## 🔍 Busca
 
 ### `search`
